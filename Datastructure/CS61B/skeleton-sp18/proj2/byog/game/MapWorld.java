@@ -1,5 +1,8 @@
 package byog.game;
 
+import java.util.Random;
+import java.util.Stack;
+
 import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
@@ -9,6 +12,9 @@ public class MapWorld {
     private static final int HEIGHT = 40;
     private static final int size_x = 51;
     private static final int size_y = 31;
+
+    private static final long SEED = 7892793;
+    private static final Random RANDOM = new Random(SEED);
 
     private static void Map_init(TETile[][] tiles) {
         for (int i = 0; i < WIDTH; i++) {
@@ -43,6 +49,45 @@ public class MapWorld {
         }
     }
 
+    // 判断全局有无未访问节点
+    private static Boolean hasNotVisited(MapCell[][] node) {
+        for (int i = 0; i < size_x / 2; i++) {
+            for (int j = 0; j < size_y / 2; j++) {
+                if (node[i][j].visited == false)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    // 相邻节点有无未访问节点
+    private static Boolean jointNotVisited(MapCell[] joinCells) {
+        for (int i = 0; i < joinCells.length; i++) {
+            if (joinCells[i] != null) {
+                if (joinCells[i].visited == false)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private static void removeWall(MapCell currentNode, int nextNodeIndex, TETile[][] tiles) {
+        switch (nextNodeIndex) {
+            case 0:
+                tiles[currentNode.cell_x][currentNode.cell_y + 1] = Tileset.FLOOR;
+                break;
+            case 1:
+                tiles[currentNode.cell_x + 1][currentNode.cell_y] = Tileset.FLOOR;
+                break;
+            case 2:
+                tiles[currentNode.cell_x][currentNode.cell_y - 1] = Tileset.FLOOR;
+                break;
+            case 3:
+                tiles[currentNode.cell_x - 1][currentNode.cell_y] = Tileset.FLOOR;
+                break;
+        }
+    }
+
     /*
      * 这里采用深度优先算法
      * 1.Make the initial cell the current cell and mark it as visited
@@ -56,6 +101,28 @@ public class MapWorld {
      * ----1.Pop a cell from the stack
      * ----2.Make it the current cell
      */
+    private static void backtracker(MapCell[][] node, TETile[][] tiles) {
+        Stack<MapCell> st = new Stack<MapCell>();
+        node[0][0].visited = true;
+        MapCell pointer = node[0][0];
+        int nextIndex;
+        while (hasNotVisited(node)) {
+            if (jointNotVisited(pointer.jointCells)) {
+                while (true) {
+                    nextIndex = RANDOM.nextInt(4);
+                    if (pointer.jointCells[nextIndex] != null) {
+                        break;
+                    }
+                }
+                st.push(pointer);
+                removeWall(pointer, nextIndex, tiles);
+                pointer.jointCells[nextIndex].visited = true;
+                pointer = pointer.jointCells[nextIndex];
+            } else if (!st.isEmpty()) {
+                pointer = st.pop();
+            }
+        }
+    }
 
     private static void Map_generate(TETile[][] tiles) {
         int start_x = (int) Math.round((double) (WIDTH - size_x) / 2);
@@ -65,7 +132,7 @@ public class MapWorld {
         MapCell[][] node = new MapCell[size_x / 2][size_y / 2];
 
         for (int i = 0; i < size_x / 2; i++) {
-            for (int j = 0; j < start_y / 2; j++) {
+            for (int j = 0; j < size_y / 2; j++) {
                 node[i][j] = new MapCell();
             }
         }
@@ -92,9 +159,9 @@ public class MapWorld {
             now_x++;
             now_y = 0;
         }
+        // 深度优先算法生成迷宫
+        backtracker(node, tiles);
 
-        System.out.println(node[0][0].jointCells[0].cell_x);
-        System.out.println(node[0][0].jointCells[0].cell_y);
     }
 
     public static void main(String[] arg) {
