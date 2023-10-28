@@ -3,6 +3,7 @@ package byog.game;
 import java.util.Random;
 import java.util.Stack;
 
+import byog.Core.Game;
 import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
@@ -13,7 +14,7 @@ public class MapWorld {
     private static final int size_x = 51;
     private static final int size_y = 31;
 
-    private static final long SEED = 7892793;
+    private static long SEED = 7892793;
     private static final Random RANDOM = new Random(SEED);
 
     private static void Map_init(TETile[][] tiles) {
@@ -168,6 +169,12 @@ public class MapWorld {
         TERenderer ter = new TERenderer();
         // Renderer init
         ter.initialize(WIDTH, HEIGHT);
+
+        // start page
+        Game g = new Game();
+        SEED = Long.parseLong(g.playWithKeyboard(WIDTH, HEIGHT));
+        System.out.println(SEED);
+
         // set tiles
         TETile[][] tiles = new TETile[WIDTH][HEIGHT];
 
