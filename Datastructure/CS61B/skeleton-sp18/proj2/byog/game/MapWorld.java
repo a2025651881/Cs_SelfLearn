@@ -3,6 +3,7 @@ package byog.game;
 import java.util.Random;
 import java.util.Stack;
 
+import byog.StdDraw;
 import byog.Core.Game;
 import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
@@ -87,6 +88,22 @@ public class MapWorld {
                 tiles[currentNode.cell_x - 1][currentNode.cell_y] = Tileset.FLOOR;
                 break;
         }
+    }
+
+    public static void drawTopGui(TETile[][] tiles) {
+        int X = (int) Math.floor(StdDraw.mouseX());
+        int Y = (int) Math.floor(StdDraw.mouseY());
+        System.out.println(X);
+        System.out.println(Y);
+        StdDraw.setPenColor(StdDraw.WHITE);
+        String state;
+        if (4 <= X && 4 <= Y && X <= 57 && Y <= 37) {
+            state = tiles[X][Y].equals(Tileset.WALL) ? "WALL" : "FLOOR";
+        } else {
+            state = "NOTING";
+        }
+        StdDraw.text(0.09 * WIDTH, 0.97 * HEIGHT, state);
+        StdDraw.line(0, 0.95 * HEIGHT, WIDTH, 0.95 * HEIGHT);
     }
 
     /*
