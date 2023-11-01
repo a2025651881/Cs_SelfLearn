@@ -2,10 +2,15 @@ package byog.Core;
 
 import java.awt.Font;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
+import java.io.IOException;
 
 import byog.StdDraw;
 import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
+import byog.game.MapWorld;
 
 public class Game {
     TERenderer ter = new TERenderer();
@@ -18,6 +23,7 @@ public class Game {
      * menu.
      */
     public String playWithKeyboard(int width, int height) {
+
         Font font = new Font("Times New Roman Italic", Font.BOLD, 40);
         Font font2 = new Font("Times New Roman Italic", Font.BOLD, 20);
         Font font3 = new Font("Arial", Font.BOLD, 20);
@@ -60,6 +66,18 @@ public class Game {
                         }
                     } catch (java.util.NoSuchElementException e) {
                     }
+                }
+            } else if (StdDraw.isKeyPressed(KeyEvent.VK_Q)) {
+                System.exit(0);
+            } else if (StdDraw.isKeyPressed(KeyEvent.VK_L)) {
+                try {
+                    System.out.println("124");
+                    ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File("Map2.txt")));
+                    MapWorld world = (MapWorld) ois.readObject();
+                    return "OK";
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                } catch (ClassNotFoundException e) {
                 }
             }
         }

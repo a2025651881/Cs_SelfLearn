@@ -1,5 +1,10 @@
 package byog.game;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Random;
 import java.util.Stack;
 
@@ -9,25 +14,30 @@ import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
 
-public class MapWorld {
+public class MapWorld implements Serializable {
     private static final int WIDTH = 60;
     private static final int HEIGHT = 40;
     private static final int size_x = 51;
     private static final int size_y = 31;
 
-    private static long SEED = 7892793;
-    private static final Random RANDOM = new Random(SEED);
+    public static long SEED = 7892793;
+    public static Random RANDOM = new Random(SEED);
+    private static TETile[][] Tiles;
 
-    private static void Map_init(TETile[][] tiles) {
+    public static void setTiles(TETile[][] tiles) {
+        Tiles = tiles;
+    }
+
+    public static void Map_init() {
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++)
-                tiles[i][j] = Tileset.NOTHING;
+                Tiles[i][j] = Tileset.NOTHING;
         }
         double gap_x = (double) (WIDTH - size_x) / 2;
         double gap_y = (double) (HEIGHT - size_y) / 2;
         for (int i = (int) Math.round(gap_x); i < WIDTH - Math.floor(gap_x); i++) {
             for (int j = (int) Math.round(gap_y); j < HEIGHT - Math.floor(gap_y); j++)
-                tiles[i][j] = Tileset.WALL;
+                Tiles[i][j] = Tileset.WALL;
         }
     }
 
@@ -73,32 +83,31 @@ public class MapWorld {
         return false;
     }
 
-    private static void removeWall(MapCell currentNode, int nextNodeIndex, TETile[][] tiles) {
+    private static void removeWall(MapCell currentNode, int nextNodeIndex) {
         switch (nextNodeIndex) {
             case 0:
-                tiles[currentNode.cell_x][currentNode.cell_y + 1] = Tileset.FLOOR;
+                Tiles[currentNode.cell_x][currentNode.cell_y + 1] = Tileset.FLOOR;
                 break;
             case 1:
-                tiles[currentNode.cell_x + 1][currentNode.cell_y] = Tileset.FLOOR;
+                Tiles[currentNode.cell_x + 1][currentNode.cell_y] = Tileset.FLOOR;
                 break;
             case 2:
-                tiles[currentNode.cell_x][currentNode.cell_y - 1] = Tileset.FLOOR;
+                Tiles[currentNode.cell_x][currentNode.cell_y - 1] = Tileset.FLOOR;
                 break;
             case 3:
-                tiles[currentNode.cell_x - 1][currentNode.cell_y] = Tileset.FLOOR;
+                Tiles[currentNode.cell_x - 1][currentNode.cell_y] = Tileset.FLOOR;
                 break;
         }
     }
 
-    public static void drawTopGui(TETile[][] tiles) {
+    // 绘制顶部 GUI
+    public static void drawTopGui() {
         int X = (int) Math.floor(StdDraw.mouseX());
         int Y = (int) Math.floor(StdDraw.mouseY());
-        System.out.println(X);
-        System.out.println(Y);
         StdDraw.setPenColor(StdDraw.WHITE);
         String state;
-        if (4 <= X && 4 <= Y && X <= 57 && Y <= 37) {
-            state = tiles[X][Y].equals(Tileset.WALL) ? "WALL" : "FLOOR";
+        if (4 <= X && 4 <= Y && X <= 55 && Y <= 35) {
+            state = Tiles[X][Y].equals(Tileset.WALL) ? "WALL" : "FLOOR";
         } else {
             state = "NOTING";
         }
@@ -119,7 +128,7 @@ public class MapWorld {
      * ----1.Pop a cell from the stack
      * ----2.Make it the current cell
      */
-    private static void backtracker(MapCell[][] node, TETile[][] tiles) {
+    private static void backtracker(MapCell[][] node) {
         Stack<MapCell> st = new Stack<MapCell>();
         node[0][0].visited = true;
         MapCell pointer = node[0][0];
@@ -133,7 +142,7 @@ public class MapWorld {
                     }
                 }
                 st.push(pointer);
-                removeWall(pointer, nextIndex, tiles);
+                removeWall(pointer, nextIndex);
                 pointer.jointCells[nextIndex].visited = true;
                 pointer = pointer.jointCells[nextIndex];
             } else if (!st.isEmpty()) {
@@ -142,7 +151,7 @@ public class MapWorld {
         }
     }
 
-    private static void Map_generate(TETile[][] tiles) {
+    public static void Map_generate() {
         int start_x = (int) Math.round((double) (WIDTH - size_x) / 2);
         int start_y = (int) Math.round((double) (HEIGHT - size_y) / 2);
         int now_x = 0, now_y = 0;
@@ -157,7 +166,7 @@ public class MapWorld {
 
         for (int i = start_x + 1; i < WIDTH - Math.floor((double) (WIDTH - size_x) / 2); i += 2) {
             for (int j = start_y + 1; j < HEIGHT - Math.floor((double) (HEIGHT - size_y) / 2); j += 2) {
-                tiles[i][j] = Tileset.FLOOR;
+                Tiles[i][j] = Tileset.FLOOR;
                 node[now_x][now_y].cell_x = i;
                 node[now_x][now_y].cell_y = j;
                 // jointCells[0] 上方
@@ -178,27 +187,90 @@ public class MapWorld {
             now_y = 0;
         }
         // 深度优先算法生成迷宫
-        backtracker(node, tiles);
+        backtracker(node);
 
     }
 
-    public static void main(String[] arg) {
-        TERenderer ter = new TERenderer();
-        // Renderer init
-        ter.initialize(WIDTH, HEIGHT);
+    /*
+     * 这里同样采用 以下顺序 返回运动方向 ：
+     * ---[0]
+     * [3] * [1]
+     * ---[2]
+     */
+    public static int lisenKey(TETile[][] tiles) {
+        char c = ' ';
+        try {
+            c = StdDraw.nextKeyTyped();
+        } catch (java.util.NoSuchElementException e) {
+        }
+        switch (c) {
+            case 'w':
+                return 0;
+            case 'd':
+                return 1;
+            case 's':
+                return 2;
+            case 'a':
+                return 3;
+            case 'o':
+                return 4;
+            default:
+                return -1;
+        }
+    }
 
-        // start page
-        Game g = new Game();
-        SEED = Long.parseLong(g.playWithKeyboard(WIDTH, HEIGHT));
-        System.out.println(SEED);
+    // 渲染迷宫
+    public static void renderScreen(MapWorld world) {
+        int numXTiles = Tiles.length;
+        int numYTiles = Tiles[0].length;
+        int playerLocateX = RANDOM.nextInt((int) size_x / 2); // Player 随机位置
+        int playerLocateY = RANDOM.nextInt((int) size_y / 2);
+        int player_x = (int) Math.round((double) (WIDTH - size_x) / 2) + playerLocateX * 2 + 1; // 地图左下角坐标
+        int player_y = (int) Math.round((double) (HEIGHT - size_y) / 2) + playerLocateY * 2 + 1;
 
-        // set tiles
-        TETile[][] tiles = new TETile[WIDTH][HEIGHT];
-
-        Map_init(tiles);
-        Map_generate(tiles);
-        // show
-        ter.renderFrame(tiles);
+        while (true) {
+            StdDraw.clear(StdDraw.BLACK);
+            for (int x = 0; x < numXTiles; x += 1) {
+                for (int y = 0; y < numYTiles; y += 1) {
+                    if (Tiles[x][y] == null) {
+                        throw new IllegalArgumentException("Tile at position x=" + x + ", y=" + y
+                                + " is null.");
+                    }
+                    Tiles[x][y].draw(x, y);
+                }
+            }
+            drawTopGui();
+            int direction = lisenKey(Tiles);
+            // 生成 PlAYER , LOCKDOOR
+            Tiles[player_x][player_y] = Tileset.FLOOR;
+            if (direction == 0) {
+                player_y++;
+                player_y = Tiles[player_x][player_y] == Tileset.WALL ? player_y - 1 : player_y;
+            } else if (direction == 1) {
+                player_x++;
+                player_x = Tiles[player_x][player_y] == Tileset.WALL ? player_x - 1 : player_x;
+            } else if (direction == 2) {
+                player_y--;
+                player_y = Tiles[player_x][player_y] == Tileset.WALL ? player_y + 1 : player_y;
+            } else if (direction == 3) {
+                player_x--;
+                player_x = Tiles[player_x][player_y] == Tileset.WALL ? player_x + 1 : player_x;
+            } else if (direction == 4) {
+                try {
+                    System.out.println("1111");
+                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+                            new FileOutputStream(new File("Map2.txt")));
+                    objectOutputStream.writeObject(world);
+                    objectOutputStream.close();
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+            Tiles[player_x][player_y] = Tileset.PLAYER;
+            StdDraw.show();
+            StdDraw.pause(50);
+        }
 
     }
+
 }
