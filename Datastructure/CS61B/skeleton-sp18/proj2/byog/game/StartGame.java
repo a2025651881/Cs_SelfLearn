@@ -28,6 +28,8 @@ public class StartGame {
                 ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File("Map2.txt")));
                 world = (MapWorld) ois.readObject();
                 System.out.println(world.SEED);
+                // flage: true 以存档形式开启
+                world.renderScreen(world, true);
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             } catch (ClassNotFoundException e) {
@@ -42,11 +44,12 @@ public class StartGame {
             world.setTiles(tiles);
             world.Map_init();
             world.Map_generate();
+            // flage: false 以存档形式开启
+            world.renderScreen(world, false);
         }
 
         // game render
 
-        world.renderScreen(world);
         // ter.renderFrame(tiles);
 
     }

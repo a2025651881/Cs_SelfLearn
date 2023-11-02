@@ -9,8 +9,6 @@ import java.util.Random;
 import java.util.Stack;
 
 import byog.StdDraw;
-import byog.Core.Game;
-import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
 
@@ -20,15 +18,17 @@ public class MapWorld implements Serializable {
     private static final int size_x = 51;
     private static final int size_y = 31;
 
-    public static long SEED = 7892793;
-    public static Random RANDOM = new Random(SEED);
-    private static TETile[][] Tiles;
+    public long SEED = 7892793;
+    public Random RANDOM = new Random(SEED);
+    private int player_x;
+    private int player_y;
+    private TETile[][] Tiles;
 
-    public static void setTiles(TETile[][] tiles) {
+    public void setTiles(TETile[][] tiles) {
         Tiles = tiles;
     }
 
-    public static void Map_init() {
+    public void Map_init() {
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++)
                 Tiles[i][j] = Tileset.NOTHING;
@@ -49,7 +49,7 @@ public class MapWorld implements Serializable {
      * [3] * [1]
      * ---[2]
      */
-    private static class MapCell {
+    private class MapCell {
         MapCell[] jointCells = new MapCell[4];
         Boolean visited = false;
         int cell_x;
@@ -62,7 +62,7 @@ public class MapWorld implements Serializable {
     }
 
     // 判断全局有无未访问节点
-    private static Boolean hasNotVisited(MapCell[][] node) {
+    private Boolean hasNotVisited(MapCell[][] node) {
         for (int i = 0; i < size_x / 2; i++) {
             for (int j = 0; j < size_y / 2; j++) {
                 if (node[i][j].visited == false)
@@ -73,7 +73,7 @@ public class MapWorld implements Serializable {
     }
 
     // 相邻节点有无未访问节点
-    private static Boolean jointNotVisited(MapCell[] joinCells) {
+    private Boolean jointNotVisited(MapCell[] joinCells) {
         for (int i = 0; i < joinCells.length; i++) {
             if (joinCells[i] != null) {
                 if (joinCells[i].visited == false)
@@ -83,7 +83,7 @@ public class MapWorld implements Serializable {
         return false;
     }
 
-    private static void removeWall(MapCell currentNode, int nextNodeIndex) {
+    private void removeWall(MapCell currentNode, int nextNodeIndex) {
         switch (nextNodeIndex) {
             case 0:
                 Tiles[currentNode.cell_x][currentNode.cell_y + 1] = Tileset.FLOOR;
@@ -101,7 +101,7 @@ public class MapWorld implements Serializable {
     }
 
     // 绘制顶部 GUI
-    public static void drawTopGui() {
+    public void drawTopGui() {
         int X = (int) Math.floor(StdDraw.mouseX());
         int Y = (int) Math.floor(StdDraw.mouseY());
         StdDraw.setPenColor(StdDraw.WHITE);
@@ -128,7 +128,7 @@ public class MapWorld implements Serializable {
      * ----1.Pop a cell from the stack
      * ----2.Make it the current cell
      */
-    private static void backtracker(MapCell[][] node) {
+    private void backtracker(MapCell[][] node) {
         Stack<MapCell> st = new Stack<MapCell>();
         node[0][0].visited = true;
         MapCell pointer = node[0][0];
@@ -151,7 +151,7 @@ public class MapWorld implements Serializable {
         }
     }
 
-    public static void Map_generate() {
+    public void Map_generate() {
         int start_x = (int) Math.round((double) (WIDTH - size_x) / 2);
         int start_y = (int) Math.round((double) (HEIGHT - size_y) / 2);
         int now_x = 0, now_y = 0;
@@ -197,7 +197,7 @@ public class MapWorld implements Serializable {
      * [3] * [1]
      * ---[2]
      */
-    public static int lisenKey(TETile[][] tiles) {
+    public int lisenKey() {
         char c = ' ';
         try {
             c = StdDraw.nextKeyTyped();
@@ -220,14 +220,17 @@ public class MapWorld implements Serializable {
     }
 
     // 渲染迷宫
-    public static void renderScreen(MapWorld world) {
+    public void renderScreen(MapWorld world, Boolean flage) {
         int numXTiles = Tiles.length;
         int numYTiles = Tiles[0].length;
         int playerLocateX = RANDOM.nextInt((int) size_x / 2); // Player 随机位置
         int playerLocateY = RANDOM.nextInt((int) size_y / 2);
-        int player_x = (int) Math.round((double) (WIDTH - size_x) / 2) + playerLocateX * 2 + 1; // 地图左下角坐标
-        int player_y = (int) Math.round((double) (HEIGHT - size_y) / 2) + playerLocateY * 2 + 1;
 
+        // 以正常形式开启时，需要赋初值
+        if (!flage) {
+            player_x = (int) Math.round((double) (WIDTH - size_x) / 2) + playerLocateX * 2 + 1; // 地图左下角坐标
+            player_y = (int) Math.round((double) (HEIGHT - size_y) / 2) + playerLocateY * 2 + 1;
+        }
         while (true) {
             StdDraw.clear(StdDraw.BLACK);
             for (int x = 0; x < numXTiles; x += 1) {
@@ -240,21 +243,21 @@ public class MapWorld implements Serializable {
                 }
             }
             drawTopGui();
-            int direction = lisenKey(Tiles);
+            int direction = lisenKey();
             // 生成 PlAYER , LOCKDOOR
             Tiles[player_x][player_y] = Tileset.FLOOR;
             if (direction == 0) {
                 player_y++;
-                player_y = Tiles[player_x][player_y] == Tileset.WALL ? player_y - 1 : player_y;
+                player_y = Tiles[player_x][player_y].character() == '#' ? player_y - 1 : player_y;
             } else if (direction == 1) {
                 player_x++;
-                player_x = Tiles[player_x][player_y] == Tileset.WALL ? player_x - 1 : player_x;
+                player_x = Tiles[player_x][player_y].character() == '#' ? player_x - 1 : player_x;
             } else if (direction == 2) {
                 player_y--;
-                player_y = Tiles[player_x][player_y] == Tileset.WALL ? player_y + 1 : player_y;
+                player_y = Tiles[player_x][player_y].character() == '#' ? player_y + 1 : player_y;
             } else if (direction == 3) {
                 player_x--;
-                player_x = Tiles[player_x][player_y] == Tileset.WALL ? player_x + 1 : player_x;
+                player_x = Tiles[player_x][player_y].character() == '#' ? player_x + 1 : player_x;
             } else if (direction == 4) {
                 try {
                     System.out.println("1111");
@@ -267,6 +270,7 @@ public class MapWorld implements Serializable {
                 }
             }
             Tiles[player_x][player_y] = Tileset.PLAYER;
+
             StdDraw.show();
             StdDraw.pause(50);
         }
