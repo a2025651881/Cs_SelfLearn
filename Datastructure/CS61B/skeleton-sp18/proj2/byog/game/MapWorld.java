@@ -17,21 +17,26 @@ public class MapWorld implements Serializable {
     private static final int HEIGHT = 40;
     private static final int size_x = 51;
     private static final int size_y = 31;
+    private static final int RADIUS = 5;
 
     public long SEED = 7892793;
     public Random RANDOM = new Random(SEED);
     private int player_x;
     private int player_y;
     private TETile[][] Tiles;
+    private TETile[][] inSightTiles;
 
-    public void setTiles(TETile[][] tiles) {
+    public void setTiles(TETile[][] tiles, TETile[][] inSighTeTiles) {
         Tiles = tiles;
+        inSightTiles = inSighTeTiles;
     }
 
     public void Map_init() {
         for (int i = 0; i < WIDTH; i++) {
-            for (int j = 0; j < HEIGHT; j++)
+            for (int j = 0; j < HEIGHT; j++) {
                 Tiles[i][j] = Tileset.NOTHING;
+                inSightTiles[i][j] = Tileset.NOTHING;
+            }
         }
         double gap_x = (double) (WIDTH - size_x) / 2;
         double gap_y = (double) (HEIGHT - size_y) / 2;
@@ -219,6 +224,18 @@ public class MapWorld implements Serializable {
         }
     }
 
+    // 计算视野范围 ( RADIUS == 3 ) 内 的方块
+    public void insightTiles() {
+        for (int i = 0; i < WIDTH; i++) {
+            for (int j = 0; j < HEIGHT; j++) {
+                inSightTiles[i][j] = Tileset.NOTHING;
+                if (Math.sqrt(Math.pow(i - player_x, 2) + Math.pow(j - player_y, 2)) < RADIUS) {
+                    inSightTiles[i][j] = Tiles[i][j];
+                }
+            }
+        }
+    }
+
     // 渲染迷宫
     public void renderScreen(MapWorld world, Boolean flage) {
         int numXTiles = Tiles.length;
@@ -233,13 +250,14 @@ public class MapWorld implements Serializable {
         }
         while (true) {
             StdDraw.clear(StdDraw.BLACK);
+            insightTiles();
             for (int x = 0; x < numXTiles; x += 1) {
                 for (int y = 0; y < numYTiles; y += 1) {
-                    if (Tiles[x][y] == null) {
+                    if (inSightTiles[x][y] == null) {
                         throw new IllegalArgumentException("Tile at position x=" + x + ", y=" + y
                                 + " is null.");
                     }
-                    Tiles[x][y].draw(x, y);
+                    inSightTiles[x][y].draw(x, y);
                 }
             }
             drawTopGui();

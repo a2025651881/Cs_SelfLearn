@@ -41,7 +41,8 @@ public class StartGame {
             // set tiles
             world.RANDOM = RANDOM;
             TETile[][] tiles = new TETile[WIDTH][HEIGHT];
-            world.setTiles(tiles);
+            TETile[][] inSightTiles = new TETile[WIDTH][HEIGHT];
+            world.setTiles(tiles, inSightTiles);
             world.Map_init();
             world.Map_generate();
             // flage: false 以存档形式开启
