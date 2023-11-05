@@ -16,13 +16,14 @@
  *
  ******************************************************************************/
 package hw2;
+
 import java.awt.Font;
 
-import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.StdDraw;
+import hw2.lib.In;
+import hw2.lib.StdDraw;
 
 public class PercolationVisualizer {
-/*
+
     // delay in miliseconds (controls animation speed)
     private static final int DELAY = 100;
 
@@ -31,7 +32,7 @@ public class PercolationVisualizer {
         StdDraw.clear();
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.setXscale(-.05 * N, 1.05 * N);
-        StdDraw.setYscale(-.05 * N, 1.05 * N);   // leave a border to write text
+        StdDraw.setYscale(-.05 * N, 1.05 * N); // leave a border to write text
         StdDraw.filledSquare(N / 2.0, N / 2.0, N / 2.0);
 
         // draw N-by-N grid
@@ -66,22 +67,26 @@ public class PercolationVisualizer {
         Percolation perc = new Percolation(N);
 
         // turn on animation mode
-        StdDraw.show(0);
+        StdDraw.enableDoubleBuffering();
+        StdDraw.show();
 
         // repeatedly read in sites to open and draw resulting system
         draw(perc, N);
-        StdDraw.show(DELAY);
+        StdDraw.pause(DELAY);
+        StdDraw.show();
         while (!in.isEmpty()) {
             int i = in.readInt();
             int j = in.readInt();
             perc.open(i, j);
             draw(perc, N);
-            StdDraw.show(DELAY);
+            StdDraw.pause(DELAY);
+            StdDraw.show();
         }
     }
 
     public static void main(String[] args) {
-        String filename = args[0];
+        String filename = "./inputFiles/greeting57.txt";
         simulateFromFile(filename);
-    }*/
+    }
+
 }
