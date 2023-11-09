@@ -1,11 +1,14 @@
-package hw3.hash;
+package hw3.test;
 
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.ArrayList;
-import edu.princeton.cs.algs4.StdRandom;
+
+import hw3.hash.Oomage;
+import hw3.hash.OomageTestUtility;
+import hw3.lib.StdRandom;
 
 public class TestNiceSpreadOomage {
     private static class NiceSpreadOomage implements Oomage {
@@ -23,14 +26,16 @@ public class TestNiceSpreadOomage {
 
         public static NiceSpreadOomage randomNiceSpreadOomage() {
             NiceSpreadOomage x = new NiceSpreadOomage();
-            x.val = StdRandom.uniform(0, 1000000);
+            x.val = StdRandom.uniformInt(0, 1000000);
             return x;
         }
 
     }
 
-    /** After you've written haveNiceHashCodeSpread,
-     * run this and it should pass.*/
+    /**
+     * After you've written haveNiceHashCodeSpread,
+     * run this and it should pass.
+     */
     @Test
     public void testRandomOomagesHashCodeSpread() {
         List<Oomage> oomages = new ArrayList<>();
