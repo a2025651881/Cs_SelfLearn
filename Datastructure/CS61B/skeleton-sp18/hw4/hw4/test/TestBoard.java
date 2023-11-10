@@ -1,5 +1,9 @@
-package hw4.puzzle;
+package hw4.test;
+
 import org.junit.Test;
+
+import hw4.puzzle.Board;
+
 import static org.junit.Assert.*;
 
 public class TestBoard {
@@ -22,6 +26,8 @@ public class TestBoard {
         assertEquals("Your Board class is not being initialized with the right values.", 3, b.tileAt(1, 1));
 
         x[1][1] = 1000;
-        assertEquals("Your Board class is mutable and you should be making a copy of the values in the passed tiles array. Please see the FAQ!", 3, b.tileAt(1, 1));
+        assertEquals(
+                "Your Board class is mutable and you should be making a copy of the values in the passed tiles array. Please see the FAQ!",
+                3, b.tileAt(1, 1));
     }
-} 
+}
