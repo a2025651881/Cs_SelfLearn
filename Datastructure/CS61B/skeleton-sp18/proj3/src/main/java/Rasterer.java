@@ -17,20 +17,41 @@ public class Rasterer {
     public Rasterer() {
         // YOUR CODE HERE
     }
-
-    // 此处选择了较大 边 的比例,使得完全显示
+    // STATUS
+    public void  chooseStatus(Map<String, Object> results){
+        Boolean status=true;
+        if(     //  params.get("ullon") < TOTAL_tile_ullon
+                //|| params.get("lrlon") > TOTAL_tile_lrlon
+                //|| params.get("ullat") > TOTAL_tile_ullat
+                //|| params.get("lrlat") < TOTAL_tile_lrlat   // 在边界之外
+                 params.get("ullon") > TOTAL_tile_lrlon
+                || params.get("ullat") < TOTAL_tile_lrlat
+                || params.get("ullon") > params.get("lrlon")
+                || params.get("ullat") < params.get("lrlat"))
+        {
+            status=false;
+        }
+        results.put("query_success",status);
+        System.out.println(results);
+    }
+    // Amplitude Limiting 限幅
+    public  void amplitudeLimiting(){
+        if(params.get("lrlon")>TOTAL_tile_lrlon) params.put("lrlon",TOTAL_tile_lrlon);
+        if(params.get("ullon")<TOTAL_tile_ullon) params.put("ullon",TOTAL_tile_ullon);
+        if(params.get("ullat")>TOTAL_tile_ullat) params.put("ullat",TOTAL_tile_ullat);
+        if(params.get("lrlat")<TOTAL_tile_lrlat) params.put("lrlat",TOTAL_tile_lrlat);
+    }
+    // 此处计算 精确比例
     public  double computeExpectK(){
         double k_w=(params.get("lrlon")-params.get("ullon"))/params.get("w");
-        double K_h=(params.get("ullat")-params.get("lrlat"))/params.get("h");
-        return  Math.min(K_h,k_w);
+        return  k_w;
     }
     public void choosePic(double k,Map<String, Object> results){
         int depth;
         for(depth=0;depth<7;depth++){
             double pic_i_lonk=(TOTAL_tile_lrlon-TOTAL_tile_ullon)/Math.pow(2,depth)/256;
-            double pic_i_latk=(TOTAL_tile_ullat-TOTAL_tile_lrlat)/Math.pow(2,depth)/256;
-            // 竖直精度 or 水平精度达到所需
-            if(pic_i_lonk < k || pic_i_latk < k){
+            //  水平精度达到所需 or 达到最小精度
+            if(pic_i_lonk <= k){
                 break;
             }
         }
@@ -45,10 +66,13 @@ public class Rasterer {
         int endlon  = (int) ((params.get("lrlon")-TOTAL_tile_ullon)/pic_i_longap);
         int startlat= (int) ((TOTAL_tile_ullat-params.get("ullat"))/pic_i_latgap);
         int endlat  = (int) ((TOTAL_tile_ullat-params.get("lrlat"))/pic_i_latgap);
+        endlon = endlon==Math.pow(2,depth)?endlon-1:endlon;
+        endlat = endlat==Math.pow(2,depth)?endlat-1:endlat;
         double raster_ul_lon=TOTAL_tile_ullon+startlon*pic_i_longap;
         double raster_lr_lon=TOTAL_tile_ullon+(endlon+1)*pic_i_longap;
-        double raster_lr_lat=TOTAL_tile_lrlat+startlat*pic_i_latgap;
-        double raster_ul_lat=TOTAL_tile_lrlat+(endlon+1)*pic_i_latgap;
+        double raster_ul_lat=TOTAL_tile_ullat-startlat*pic_i_latgap;
+        double raster_lr_lat=TOTAL_tile_ullat-(endlat+1)*pic_i_latgap;
+
         //添加至 results
         results.put("raster_ul_lon",raster_ul_lon);
         results.put("raster_lr_lon",raster_lr_lon);
@@ -98,14 +122,15 @@ public class Rasterer {
         System.out.println(params);
         this.params=params;
         Map<String, Object> results = new HashMap<>();
+        // STATUS
+        chooseStatus(results);
         // 计算深度
         choosePic(computeExpectK(),results);
+        // 限幅
+        amplitudeLimiting();
         // 计算所需图片 和 地域区间
         pic_radius_area(results);
-        //success
-        Boolean status=true;
-        results.put("query_success",status);
-        System.out.println(results);
+
         return results;
     }
 
