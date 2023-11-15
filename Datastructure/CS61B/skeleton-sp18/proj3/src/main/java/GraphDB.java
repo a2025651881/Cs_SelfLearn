@@ -20,7 +20,50 @@ import java.util.ArrayList;
 public class GraphDB {
     /** Your instance variables for storing the graph. You should consider
      * creating helper classes, e.g. Node, Edge, etc. */
+    public class node{
+        private final String id;
+        private final double lon;
+        private final double lat;
+        public ArrayList<node> edgeList;
+        private int edgeSize;
+        public node(String id,double lon,double lat){
+            this.lon=lon;
+            this.lat=lat;
+            this.id=id;
+            this.edgeList= new ArrayList<node>();
+            this.edgeSize=0;
+        }
+        public void setEdgeList(node anode){
+            // 若不包含元素 a , 则添加至边列表
+            if(!this.edgeList.contains(anode))
+            {
+                this.edgeList.add(anode);
+                this.edgeSize++;
+            }
+        }
+        public void deleteEdge(node anode){
+            if(this.edgeList.contains(anode)){
+                this.edgeList.remove(anode);
+                this.edgeSize--;
+            }
+        }
+        public ArrayList<node> getEdgeList(){
+            return  edgeList;
+        }
+        public int getEdgeSize(){
+            return  this.edgeSize;
+        }
 
+        public double getLon(){
+            return lon;
+        }
+        public double getLat(){
+            return lat;
+        }
+        public String getId(){
+            return id;
+        }
+    }
     /**
      * Example constructor shows how to create and start an XML parser.
      * You do not need to modify this constructor, but you're welcome to do so.
