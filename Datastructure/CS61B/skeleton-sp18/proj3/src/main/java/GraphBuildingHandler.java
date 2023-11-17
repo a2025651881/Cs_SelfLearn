@@ -2,6 +2,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,7 +39,7 @@ public class GraphBuildingHandler extends DefaultHandler {
                     "secondary_link", "tertiary_link"));
     private String activeState = "";
     private final GraphDB g;
-
+    private ArrayList<String> tempNodeRef=new ArrayList<String>();
     /**
      * Create a new GraphBuildingHandler.
      * @param g The graph to populate with the XML data.
@@ -68,9 +69,16 @@ public class GraphBuildingHandler extends DefaultHandler {
         if (qName.equals("node")) {
             /* We encountered a new <node...> tag. */
             activeState = "node";
-//            System.out.println("Node id: " + attributes.getValue("id"));
-//            System.out.println("Node lon: " + attributes.getValue("lon"));
-//            System.out.println("Node lat: " + attributes.getValue("lat"));
+            GraphDB.node n=new GraphDB.node(Long.valueOf(attributes.getValue("id")),
+                    Double.parseDouble(attributes.getValue("lon")),
+                    Double.parseDouble(attributes.getValue("lat"))
+                        );
+            if(Long.valueOf(attributes.getValue("id")) == 46){
+                System.out.println("get here");
+            }
+            g.addGraph(n);
+
+            System.out.println("Node id: " + attributes.getValue("id"));
 
             /* TODO Use the above information to save a "node" to somewhere. */
             /* Hint: A graph-like structure would be nice. */
@@ -78,11 +86,15 @@ public class GraphBuildingHandler extends DefaultHandler {
         } else if (qName.equals("way")) {
             /* We encountered a new <way...> tag. */
             activeState = "way";
+
 //            System.out.println("Beginning a way...");
         } else if (activeState.equals("way") && qName.equals("nd")) {
             /* While looking at a way, we found a <nd...> tag. */
-            //System.out.println("Id of a node in this way: " + attributes.getValue("ref"));
-
+            System.out.println("Id of a node in this way: " + attributes.getValue("ref"));
+            tempNodeRef.add(attributes.getValue("ref"));
+            if(Long.parseLong(attributes.getValue("ref")) == 35719045){
+                System.out.println("find it");
+            }
             /* TODO Use the above id to make "possible" connections between the nodes in this way */
             /* Hint1: It would be useful to remember what was the last node in this way. */
             /* Hint2: Not all ways are valid. So, directly connecting the nodes here would be
@@ -98,9 +110,11 @@ public class GraphBuildingHandler extends DefaultHandler {
                 //System.out.println("Max Speed: " + v);
                 /* TODO set the max speed of the "current way" here. */
             } else if (k.equals("highway")) {
-                //System.out.println("Highway type: " + v);
+                System.out.println("Highway type: " + v);
                 /* TODO Figure out whether this way and its connections are valid. */
                 /* Hint: Setting a "flag" is good enough! */
+                if(ALLOWED_HIGHWAY_TYPES.contains(v)) g.addManytEdge(tempNodeRef);
+                else tempNodeRef.clear();
             } else if (k.equals("name")) {
                 //System.out.println("Way Name: " + v);
             }
@@ -130,6 +144,7 @@ public class GraphBuildingHandler extends DefaultHandler {
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
         if (qName.equals("way")) {
+            tempNodeRef.clear();
             /* We are done looking at a way. (We finished looking at the nodes, speeds, etc...)*/
             /* Hint1: If you have stored the possible connections for this way, here's your
             chance to actually connect the nodes together if the way is valid. */

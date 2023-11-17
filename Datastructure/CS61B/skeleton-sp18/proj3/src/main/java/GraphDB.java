@@ -1,3 +1,4 @@
+
 import org.xml.sax.SAXException;
 
 import java.io.File;
@@ -7,6 +8,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.util.ArrayList;
+import java.util.LinkedList;
+
 
 /**
  * Graph for storing all of the intersection (vertex) and road (edge) information.
@@ -17,23 +20,25 @@ import java.util.ArrayList;
  *
  * @author Alan Yao, Josh Hug
  */
+
 public class GraphDB {
     /** Your instance variables for storing the graph. You should consider
      * creating helper classes, e.g. Node, Edge, etc. */
-    public class node{
-        private final String id;
+    private LinkedList<node> Grap=new LinkedList<node>();
+    public static class node{
+        private final long id;
         private final double lon;
         private final double lat;
         public ArrayList<node> edgeList;
         private int edgeSize;
-        public node(String id,double lon,double lat){
+        public node(long id,double lon,double lat){
             this.lon=lon;
             this.lat=lat;
             this.id=id;
             this.edgeList= new ArrayList<node>();
             this.edgeSize=0;
         }
-        public void setEdgeList(node anode){
+        public void addEdgeList(node anode){
             // 若不包含元素 a , 则添加至边列表
             if(!this.edgeList.contains(anode))
             {
@@ -60,9 +65,65 @@ public class GraphDB {
         public double getLat(){
             return lat;
         }
-        public String getId(){
+        public long getId(){
             return id;
         }
+    }
+
+
+    public void addGraph(node n) {
+        int low = 0;
+        int high = Grap.size()-1;
+
+        if(high==-1){
+            Grap.add(n);
+        }
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            if(low == high) {
+                if(Grap.get(low).id > n.id) Grap.add(low,n);
+                else Grap.add(low+1,n);
+                break;
+            }else if(Grap.get(low).id > n.id){
+                Grap.add(low,n);
+                break;
+            }else if(Grap.get(high).id < n.id){
+                Grap.add(high+1,n);
+                break;
+            }else if (Grap.get(mid).id < n.id) {
+                low = mid + 1;
+            } else if (Grap.get(mid).id >n.id) {
+                high = mid - 1;
+            }
+        }
+    }
+
+    public void addManytEdge(ArrayList<String> tempNodeRef){
+        for (int i=0;i<tempNodeRef.size()-1;i++){
+                node firstNode=find(Long.parseLong(tempNodeRef.get(i)));
+                node secondNode=find(Long.parseLong(tempNodeRef.get(i+1)));
+                firstNode.addEdgeList(secondNode);
+                secondNode.addEdgeList(firstNode);
+            }
+
+    }
+
+    // 二分查找，返回下标
+    public node find(long stringid){
+        int low = 0;
+        int high = Grap.size()-1;
+
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            if (Grap.get(mid).id < stringid) {
+                low = mid + 1;
+            } else if (Grap.get(mid).id > stringid) {
+                high = mid - 1;
+            } else {
+                return Grap.get(mid);
+            }
+        }
+        return null;
     }
     /**
      * Example constructor shows how to create and start an XML parser.
@@ -100,6 +161,7 @@ public class GraphDB {
      *  we can reasonably assume this since typically roads are connected.
      */
     private void clean() {
+        Grap.removeIf(nodes -> nodes.edgeSize == 0);
         // TODO: Your code here.
     }
 
@@ -109,7 +171,11 @@ public class GraphDB {
      */
     Iterable<Long> vertices() {
         //YOUR CODE HERE, this currently returns only an empty list.
-        return new ArrayList<Long>();
+        ArrayList<Long> vertexsId=new ArrayList<Long>();
+        for (GraphDB.node node : Grap) {
+            vertexsId.add(node.id);
+        }
+        return vertexsId;
     }
 
     /**
@@ -118,7 +184,13 @@ public class GraphDB {
      * @return An iterable of the ids of the neighbors of v.
      */
     Iterable<Long> adjacent(long v) {
-        return null;
+        ArrayList<Long> vertexsId=new ArrayList<Long>();
+        node objectnode=find(v);
+        for (GraphDB.node nodes : objectnode.edgeList) {
+                    vertexsId.add(nodes.id);
+        }
+
+        return vertexsId;
     }
 
     /**
@@ -179,7 +251,16 @@ public class GraphDB {
      * @return The id of the node in the graph closest to the target.
      */
     long closest(double lon, double lat) {
-        return 0;
+        double minDistance=distance(lon, lat,Grap.get(0).lon, Grap.get(0).lat);
+        long minId=Grap.get(0).id;
+        for (node i:Grap){
+            double currentDistance=distance(lon, lat, i.lon, i.lat);
+            if(currentDistance<minDistance){
+                minDistance=currentDistance;
+                minId=i.id;
+            }
+        }
+        return minId;
     }
 
     /**
@@ -188,7 +269,12 @@ public class GraphDB {
      * @return The longitude of the vertex.
      */
     double lon(long v) {
-        return 0;
+        for (GraphDB.node itnode : Grap) {
+            if(itnode.id == v) {
+                return itnode.lon;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -197,6 +283,11 @@ public class GraphDB {
      * @return The latitude of the vertex.
      */
     double lat(long v) {
-        return 0;
+        for (GraphDB.node itnode : Grap) {
+            if(itnode.id == v) {
+                return itnode.lat;
+            }
+        }
+        return -1;
     }
 }
