@@ -1,7 +1,10 @@
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.PriorityQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 /**
  * This class provides a shortestPath method for finding routes between two points
@@ -12,6 +15,7 @@ import java.util.regex.Pattern;
  * down to the priority you use to order your vertices.
  */
 public class Router {
+
     /**
      * Return a List of longs representing the shortest path from the node
      * closest to a start location and the node closest to the destination
@@ -22,12 +26,16 @@ public class Router {
      * @param destlon The longitude of the destination location.
      * @param destlat The latitude of the destination location.
      * @return A list of node id's in the order visited on the shortest path.
+     * A* search h = f + g
+     * f : the cloest node .
+     * g : the distance from node to the end.
      */
     public static List<Long> shortestPath(GraphDB g, double stlon, double stlat,
                                           double destlon, double destlat) {
+
+
         return null; // FIXME
     }
-
     /**
      * Create the list of directions corresponding to a route on the graph.
      * @param g The graph to use.
